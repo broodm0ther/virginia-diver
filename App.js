@@ -1,14 +1,39 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import Icon from "react-native-vector-icons/Feather";
 import HomeScreen from "./screens/HomeScreen";
 import ProfileScreen from "./screens/ProfileScreen.js";
 import MessagesScreen from "./screens/MessagesScreen.js";
 import SellScreen from "./screens/SellScreen";
-import Icon from "react-native-vector-icons/Feather";
+import LoginScreen from "./screens/LoginScreen";
+import RegisterScreen from "./screens/RegisterScreen";
 
+const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+// Стек навигации для Sell, Login и Register
+const AuthStack = () => (
+  <Stack.Navigator initialRouteName="Sell">
+    <Stack.Screen
+      name="Sell"
+      component={SellScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Вход"
+      component={LoginScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name="Регистрация"
+      component={RegisterScreen}
+      options={{ headerShown: false }}
+    />
+  </Stack.Navigator>
+);
 
 export default function App() {
   return (
@@ -39,7 +64,8 @@ export default function App() {
       >
         <Tab.Screen name="Главная" component={HomeScreen} />
         <Tab.Screen name="Поиск" component={View} />
-        <Tab.Screen name="Продать" component={SellScreen} />
+        {/* Используем AuthStack в качестве компонента экрана */}
+        <Tab.Screen name="Продать" component={AuthStack} />
         <Tab.Screen name="Сообщения" component={MessagesScreen} />
         <Tab.Screen name="Профиль" component={ProfileScreen} />
       </Tab.Navigator>
