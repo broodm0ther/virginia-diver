@@ -10,7 +10,7 @@ const SellScreen = ({ navigation }) => {
       {/* Кнопка для перехода на экран логина */}
       <TouchableOpacity 
         style={styles.loginButton} 
-        onPress={() => navigation.navigate("Вход")} // Переход на экран логина
+        onPress={() => navigation.navigate("LoginScreen")} // Переход на экран логина
       >
         <Text style={styles.loginButtonText}>Log in / Sign up</Text>
       </TouchableOpacity>

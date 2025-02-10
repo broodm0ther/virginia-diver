@@ -1,47 +1,96 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { 
+  View, Text, TextInput, TouchableOpacity, StyleSheet, 
+  TouchableWithoutFeedback, Keyboard, Alert
+} from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 
 const RegisterScreen = ({ navigation }) => {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!username || !email || !password) {
+      Alert.alert("Ошибка", "Все поля должны быть заполнены!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://192.168.1.15:8080/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        Alert.alert("Успех", "Вы успешно зарегистрированы!");
+        navigation.navigate("LoginScreen"); // ✅ Перебрасываем на экран входа
+      } else {
+        Alert.alert("Ошибка", data.error || "Что-то пошло не так");
+      }
+    } catch (error) {
+      Alert.alert("Ошибка", "Не удалось подключиться к серверу");
+      console.error("Ошибка регистрации:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Регистрация</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <View style={styles.passwordContainer}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Регистрация</Text>
+
         <TextInput
           style={styles.input}
-          placeholder="Пароль"
-          secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={setPassword}
+          placeholder="Имя пользователя"
+          value={username}
+          onChangeText={setUsername}
+          placeholderTextColor="gray"
         />
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-          <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          placeholderTextColor="gray"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="Пароль"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            placeholderTextColor="gray"
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+            <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: 15 }} />
+
+        <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Зарегистрироваться"}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.link} onPress={() => navigation.navigate("LoginScreen")}>
+          <Text>Уже есть аккаунт? Войдите</Text>
         </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => console.log("Регистрация")}
-      >
-        <Text style={styles.buttonText}>Зарегистрироваться</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.link}
-        onPress={() => navigation.navigate("LoginScreen")} // ✅ исправлено
-      >
-        <Text>Уже есть аккаунт? Войдите</Text>
-      </TouchableOpacity>
-
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -59,21 +108,29 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-    flex: 1,
-    height: 40,
+    height: 45,
     borderColor: "gray",
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: 15,
     paddingHorizontal: 10,
+    backgroundColor: "white",
   },
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
+    borderColor: "gray",
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "white",
+  },
+  passwordInput: {
+    flex: 1,
+    height: 45,
   },
   eyeButton: {
-    position: "absolute",
-    right: 10,
+    padding: 10,
   },
   button: {
     backgroundColor: "black",
@@ -89,6 +146,7 @@ const styles = StyleSheet.create({
   },
   link: {
     textAlign: "center",
+    marginTop: 10,
   },
 });
 
