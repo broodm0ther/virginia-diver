@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/Feather";
+import { AuthProvider } from "./context/AuthContext";
 import HomeScreen from "./screens/HomeScreen";
 import ProfileScreen from "./screens/ProfileScreen.js";
 import MessagesScreen from "./screens/MessagesScreen.js";
@@ -23,12 +24,12 @@ const AuthStack = () => (
       options={{ headerShown: false }}
     />
     <Stack.Screen
-      name="Вход"
+      name="LoginScreen"
       component={LoginScreen}
       options={{ headerShown: false }}
     />
     <Stack.Screen
-      name="Регистрация"
+      name="RegisterScreen"
       component={RegisterScreen}
       options={{ headerShown: false }}
     />
@@ -37,39 +38,41 @@ const AuthStack = () => (
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false, // Убираем заголовок сверху
-          tabBarStyle: styles.tabBar, // Стили для Bottom Tabs
-          tabBarLabelStyle: { fontSize: 10 }, // Размер текста
-          tabBarActiveTintColor: "black", // Цвет активного текста
-          tabBarInactiveTintColor: "gray", // Цвет неактивного текста
-          tabBarIcon: ({ focused }) => {
-            let iconName;
-            if (route.name === "Главная") {
-              iconName = "home";
-            } else if (route.name === "Поиск") {
-              iconName = "search";
-            } else if (route.name === "Продать") {
-              iconName = "plus-circle";
-            } else if (route.name === "Сообщения") {
-              iconName = "message-square";
-            } else if (route.name === "Профиль") {
-              iconName = "user";
-            }
-            return <Icon name={iconName} size={24} color={focused ? "black" : "gray"} />;
-          },
-        })}
-      >
-        <Tab.Screen name="Главная" component={HomeScreen} />
-        <Tab.Screen name="Поиск" component={View} />
-        {/* Используем AuthStack в качестве компонента экрана */}
-        <Tab.Screen name="Продать" component={AuthStack} />
-        <Tab.Screen name="Сообщения" component={MessagesScreen} />
-        <Tab.Screen name="Профиль" component={ProfileScreen} />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            headerShown: false, // Убираем заголовок сверху
+            tabBarStyle: styles.tabBar, // Стили для Bottom Tabs
+            tabBarLabelStyle: { fontSize: 10 }, // Размер текста
+            tabBarActiveTintColor: "black", // Цвет активного текста
+            tabBarInactiveTintColor: "gray", // Цвет неактивного текста
+            tabBarIcon: ({ focused }) => {
+              let iconName;
+              if (route.name === "Главная") {
+                iconName = "home";
+              } else if (route.name === "Поиск") {
+                iconName = "search";
+              } else if (route.name === "Продать") {
+                iconName = "plus-circle";
+              } else if (route.name === "Сообщения") {
+                iconName = "message-square";
+              } else if (route.name === "Профиль") {
+                iconName = "user";
+              }
+              return <Icon name={iconName} size={24} color={focused ? "black" : "gray"} />;
+            },
+          })}
+        >
+          <Tab.Screen name="Главная" component={HomeScreen} />
+          <Tab.Screen name="Поиск" component={View} />
+          {/* Используем AuthStack в качестве компонента экрана */}
+          <Tab.Screen name="Продать" component={AuthStack} />
+          <Tab.Screen name="Сообщения" component={MessagesScreen} />
+          <Tab.Screen name="Профиль" component={ProfileScreen} />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
 

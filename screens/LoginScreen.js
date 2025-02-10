@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import Icon from "react-native-vector-icons/Feather"; // Импорт иконки-глаза
 
 const LoginScreen = ({ navigation }) => {
-  const [buttonPressed, setButtonPressed] = useState(false);
-  const [linkPressed, setLinkPressed] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -11,25 +13,31 @@ const LoginScreen = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Пароль"
-        secureTextEntry
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Пароль"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+          <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity
-        style={[styles.button, buttonPressed && styles.buttonPressed]}
-        onPressIn={() => setButtonPressed(true)}
-        onPressOut={() => setButtonPressed(false)}
-        onPress={() => navigation.navigate("Главная")}
+        style={styles.link}
+        onPress={() => navigation.navigate("RegisterScreen")} // ✅ исправлено
       >
-        <Text style={styles.buttonText}>Войти</Text>
+        <Text>Нет аккаунта? Зарегистрируйтесь</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
-        style={[styles.link, linkPressed && styles.linkPressed]}
-        onPressIn={() => setLinkPressed(true)}
-        onPressOut={() => setLinkPressed(false)}
-        onPress={() => navigation.navigate("Регистрация")}
+        style={styles.link}
+        onPress={() => navigation.navigate("RegisterScreen")}
       >
         <Text>Нет аккаунта? Зарегистрируйтесь</Text>
       </TouchableOpacity>
@@ -51,6 +59,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
+    flex: 1,
     height: 40,
     borderColor: "gray",
     borderWidth: 1,
@@ -58,15 +67,20 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 10,
   },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 10,
+  },
   button: {
-    backgroundColor: "black", // серый цвет
+    backgroundColor: "black",
     paddingVertical: 12,
     borderRadius: 5,
     alignItems: "center",
     marginBottom: 15,
-  },
-  buttonPressed: {
-    backgroundColor: "black", // чернеет при нажатии
   },
   buttonText: {
     color: "white",
@@ -74,11 +88,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   link: {
-    color: "gray", // серый цвет
     textAlign: "center",
-  },
-  linkPressed: {
-    color: "black", // чернеет при нажатии
   },
 });
 
