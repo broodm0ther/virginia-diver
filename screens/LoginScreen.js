@@ -16,22 +16,27 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert("Ошибка", "Введите email и пароль.");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       const response = await fetch("http://192.168.1.15:8080/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         Alert.alert("Успех", "Вы успешно вошли!");
-        console.log("Токен:", data.token); // ✅ Логируем токен
-        navigation.navigate("ProfileScreen"); // ✅ Переброс на профиль
+        console.log("Токен:", data.token);
+  
+        
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Main", params: { screen: "Профиль" } }],
+        });
       } else {
         Alert.alert("Ошибка", data.error || "Неверный email или пароль.");
       }
@@ -42,6 +47,7 @@ const LoginScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

@@ -1,14 +1,22 @@
 import React, { useContext, useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../context/AuthContext";
 
 const ProfileScreen = ({ navigation }) => {
-  const { token, logout } = useContext(AuthContext);
+  const { logout } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        const token = await AsyncStorage.getItem("token"); // ✅ Гарантируем, что токен загружен
+        if (!token) {
+          Alert.alert("Ошибка", "Токен отсутствует. Попробуйте войти снова.");
+          return;
+        }
+
         const response = await fetch("http://192.168.1.15:8080/api/auth/profile", {
           method: "GET",
           headers: {
@@ -21,15 +29,26 @@ const ProfileScreen = ({ navigation }) => {
         if (response.ok) {
           setUserData(data);
         } else {
-          Alert.alert("Ошибка", data.error || "Не удалось загрузить профиль");
+          Alert.alert("Ошибка", data.error || "Ошибка загрузки профиля.");
         }
       } catch (error) {
         Alert.alert("Ошибка", "Ошибка сети");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProfile();
   }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="black" />
+        <Text>Загрузка профиля...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -43,7 +62,7 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </>
       ) : (
-        <Text>Загрузка...</Text>
+        <Text>Ошибка загрузки профиля.</Text>
       )}
     </View>
   );
