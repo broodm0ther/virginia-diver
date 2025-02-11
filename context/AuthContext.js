@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Загружаем токен при запуске
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -17,13 +16,15 @@ export const AuthProvider = ({ children }) => {
           setToken(storedToken);
           const response = await fetch("http://192.168.1.15:8080/api/auth/profile", {
             method: "GET",
-            headers: { "Authorization": `Bearer ${storedToken}` },
+            headers: { Authorization: `Bearer ${storedToken}` },
           });
 
           const data = await response.json();
           if (response.ok) {
             setUser(data);
+            console.log("✅ Пользователь загружен:", data);
           } else {
+            console.log("🔴 Ошибка загрузки профиля, удаляем токен...");
             await AsyncStorage.removeItem("token");
             setToken(null);
             setUser(null);
@@ -38,7 +39,6 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  // ✅ Логин теперь обновляет состояние мгновенно
   const login = async (email, password) => {
     try {
       const response = await fetch("http://192.168.1.15:8080/api/auth/login", {
@@ -46,24 +46,32 @@ export const AuthProvider = ({ children }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
+  
       const data = await response.json();
+      console.log("📡 Ответ от бэкенда:", data); // ✅ Показывает полный ответ сервера
+  
       if (response.ok) {
         await AsyncStorage.setItem("token", data.token);
         setToken(data.token);
-        setUser(data.user); // ✅ Теперь `user` обновляется сразу
+        setUser(data.user); // ❌ Если `data.user` не существует, здесь ошибка!
+        console.log("✅ Вход выполнен, новый user:", data.user);
+      } else {
+        console.error("❌ Ошибка авторизации:", data.error);
       }
       return data;
     } catch (error) {
-      console.error("Ошибка при входе:", error);
+      console.error("❌ Ошибка при входе:", error);
     }
   };
+  
 
-  // ✅ Выход из аккаунта
   const logout = async () => {
+    console.log("🔴 Выход из системы...");
+    setLoading(true);
     await AsyncStorage.removeItem("token");
     setToken(null);
     setUser(null);
+    setLoading(false);
   };
 
   return (

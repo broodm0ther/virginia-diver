@@ -1,57 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  TouchableWithoutFeedback, Keyboard, Alert
+  TouchableWithoutFeedback, Keyboard, Alert 
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
+import { AuthContext } from "../context/AuthContext";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ isVisible, onClose }) => {
+  const { login } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    console.log("🔵 LoginScreen РЕНДЕРИТСЯ, isVisible:", isVisible);
+  }, [isVisible]);
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Ошибка", "Введите email и пароль.");
       return;
     }
-  
+
     setLoading(true);
-  
+
     try {
-      const response = await fetch("http://192.168.1.15:8080/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-  
-      const data = await response.json();
-  
-      if (response.ok) {
+      const data = await login(email, password);
+      if (data.user) {
         Alert.alert("Успех", "Вы успешно вошли!");
-        console.log("Токен:", data.token);
-  
-        
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Main", params: { screen: "Профиль" } }],
-        });
+        onClose(); // ✅ Закрываем модалку после входа
       } else {
         Alert.alert("Ошибка", data.error || "Неверный email или пароль.");
       }
     } catch (error) {
-      Alert.alert("Ошибка", "Не удалось подключиться к серверу.");
+      Alert.alert("Ошибка", "Ошибка при входе.");
       console.error("Ошибка входа:", error);
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
+      <KeyboardAwareScrollView 
+        contentContainerStyle={styles.container} 
+        enableOnAndroid={true} 
+        extraScrollHeight={50} // ✅ Поднимаем чуть выше при открытии клавиатуры
+      >
+        <View style={styles.handle} />
         <Text style={styles.title}>Вход</Text>
 
         <TextInput
@@ -78,26 +76,33 @@ const LoginScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 15 }} />
-
         <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Войти"}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.link} onPress={() => navigation.navigate("RegisterScreen")}>
-          <Text>Нет аккаунта? Зарегистрируйтесь</Text>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Text style={styles.closeButtonText}>Закрыть</Text>
         </TouchableOpacity>
-      </View>
+      </KeyboardAwareScrollView>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
+    backgroundColor: "white",
     padding: 20,
-    backgroundColor: "#F9F9F9",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  handle: {
+    width: 40,
+    height: 5,
+    backgroundColor: "gray",
+    borderRadius: 10,
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,
@@ -106,6 +111,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
+    width: "100%",
     height: 45,
     borderColor: "gray",
     borderWidth: 1,
@@ -135,6 +141,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 5,
     alignItems: "center",
+    width: "100%",
     marginBottom: 15,
   },
   buttonText: {
@@ -142,9 +149,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  link: {
-    textAlign: "center",
+  closeButton: {
     marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    borderColor: "black",
+    borderWidth: 1,
+  },
+  closeButtonText: {
+    color: "black",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

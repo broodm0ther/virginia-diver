@@ -1,85 +1,144 @@
-import React, { useContext } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Linking } from "react-native";
+import React, { useContext, useState } from "react";
+import { 
+  View, Text, TouchableOpacity, StyleSheet, Linking, 
+  Dimensions, PixelRatio, SafeAreaView, ScrollView
+} from "react-native";
 import { AuthContext } from "../context/AuthContext";
+import Modal from "react-native-modal";
+import LoginScreen from "./LoginScreen";
 
-const SellScreen = ({ navigation }) => {
+const { width, height } = Dimensions.get("window");
+const scaleFont = (size) => size * PixelRatio.getFontScale();
+
+const SellScreen = () => {
   const { user } = useContext(AuthContext);
+  const [isLoginVisible, setLoginVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{user ? "Чтобы продавать товар на данной площадке обратитесь к главному администратору" : "Хотите продать на Virginia Diver?"}</Text>
-      <Text style={styles.subtitle}>{user ? "Нажмите на кнопку ниже, чтобы связаться с администратором." : "Присоединяйтесь к нашему фешн комьюнити и т.д."}</Text>
-      
-      <TouchableOpacity 
-        style={styles.loginButton} 
-        onPress={() => user ? Linking.openURL("https://t.me/blightfallsummer") : navigation.navigate("Auth")}
-      >
-        <Text style={styles.loginButtonText}>{user ? "Telegram" : "Log in / Sign up"}</Text>
-      </TouchableOpacity>
-      
-      <View style={styles.featureBox}>
-        <Text style={styles.featureTitle}>🔒 Вы защищены</Text>
-        <Text style={styles.featureText}>Ваши транзакции защищены по нашей Seller Protection Program</Text>
-      </View>
-      <View style={styles.featureBox}>
-        <Text style={styles.featureTitle}>📦 Отправляйте легко</Text>
-        <Text style={styles.featureText}>Автоматическое создание доставки с помощью CDEK</Text>
-      </View>
-      <View style={styles.featureBox}>
-        <Text style={styles.featureTitle}>⚡ Продавайте быстро</Text>
-        <Text style={styles.featureText}>Понижайте цену чтобы продать ваши вещи быстрее</Text>
-      </View>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <Text style={styles.title}>
+          {String(user
+            ? "Чтобы продавать товар на данной площадке обратитесь к главному администратору"
+            : "Хотите продать на Virginia Diver?")}
+        </Text>
+
+        <Text style={styles.subtitle}>
+          {String(user
+            ? "Нажмите на кнопку ниже, чтобы связаться с администратором."
+            : "Присоединяйтесь к нашему фешн комьюнити и т.д.")}
+        </Text>
+
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={() => (user ? Linking.openURL("https://t.me/blightfallsummer") : setLoginVisible(true))}
+        >
+          <Text style={styles.loginButtonText}>{user ? "Telegram" : "Log in / Sign up"}</Text>
+        </TouchableOpacity>
+
+        <View style={styles.featureBox}>
+          <Text style={styles.featureTitle}>🔒 Вы защищены</Text>
+          <Text style={styles.featureText}>Ваши транзакции защищены по нашей Seller Protection Program</Text>
+        </View>
+        <View style={styles.featureBox}>
+          <Text style={styles.featureTitle}>📦 Отправляйте легко</Text>
+          <Text style={styles.featureText}>Автоматическое создание доставки с помощью CDEK</Text>
+        </View>
+        <View style={[styles.featureBox, styles.lastFeatureBox]}>
+          <Text style={styles.featureTitle}>⚡ Продавайте быстро</Text>
+          <Text style={styles.featureText}>Понижайте цену, чтобы продать ваши вещи быстрее</Text>
+        </View>
+      </ScrollView>
+
+      {/* Модальное окно логина */}
+      <AuthModal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
+    </SafeAreaView>
   );
 };
 
+// Компонент для модального окна логина
+const AuthModal = ({ isVisible, onClose }) => (
+  <Modal
+    isVisible={isVisible}
+    onSwipeComplete={onClose}
+    swipeDirection="down"
+    animationIn="slideInUp"
+    animationOut="slideOutDown"
+    backdropOpacity={0.5}
+    style={styles.modal}
+  >
+    <View style={styles.modalContent}>
+      <LoginScreen onClose={onClose} />
+    </View>
+  </Modal>
+);
+
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: "#F9F9F9",
-    padding: 20,
-    justifyContent: "center",
+  },
+  scrollView: {
+    flexGrow: 1,
+    paddingHorizontal: width * 0.05,
+    paddingVertical: height * 0.02,
+    alignItems: "center",
   },
   title: {
-    fontSize: 30,
+    fontSize: scaleFont(24),
     fontWeight: "bold",
-    textAlign: "left",
-    marginBottom: 5,
-    bottom: 20,
+    textAlign: "center",
+    marginBottom: height * 0.02,
+    width: "100%",
   },
   subtitle: {
-    fontSize: 13,
-    textAlign: "left",
-    marginBottom: 20,
-    bottom: 5,
+    fontSize: scaleFont(14),
+    textAlign: "center",
+    marginBottom: height * 0.02,
+    width: "100%",
   },
   loginButton: {
     backgroundColor: "black",
-    paddingVertical: 12,
+    paddingVertical: height * 0.015,
+    paddingHorizontal: width * 0.2,
     borderRadius: 5,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: height * 0.03,
   },
   loginButtonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontWeight: "bold",
   },
   featureBox: {
     backgroundColor: "white",
-    padding: 15,
+    padding: width * 0.04,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: height * 0.02,
     elevation: 2,
+    width: "100%",
+  },
+  lastFeatureBox: {
+    marginBottom: height * 0.05,
   },
   featureTitle: {
-    fontSize: 16,
+    fontSize: scaleFont(16),
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: height * 0.01,
   },
   featureText: {
-    fontSize: 14,
+    fontSize: scaleFont(14),
     color: "gray",
+  },
+  modal: {
+    justifyContent: "flex-end",
+    margin: 0,
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
 });
 
