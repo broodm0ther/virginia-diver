@@ -1,22 +1,17 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  TouchableWithoutFeedback, Keyboard, Alert 
+  TouchableWithoutFeedback, Keyboard, Alert
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { AuthContext } from "../context/AuthContext";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
-const LoginScreen = ({ isVisible, onClose }) => {
+const LoginScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    console.log("🔵 LoginScreen РЕНДЕРИТСЯ, isVisible:", isVisible);
-  }, [isVisible]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -25,18 +20,19 @@ const LoginScreen = ({ isVisible, onClose }) => {
     }
 
     setLoading(true);
-
     try {
       const data = await login(email, password);
       if (data.user) {
         Alert.alert("Успех", "Вы успешно вошли!");
-        onClose(); // ✅ Закрываем модалку после входа
+
+        // ✅ Перенаправляем пользователя на Главную с открытой вкладкой "Поиск"
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainTabs", params: { screen: "Поиск" } }],
+        });
       } else {
         Alert.alert("Ошибка", data.error || "Неверный email или пароль.");
       }
-    } catch (error) {
-      Alert.alert("Ошибка", "Ошибка при входе.");
-      console.error("Ошибка входа:", error);
     } finally {
       setLoading(false);
     }
@@ -44,12 +40,13 @@ const LoginScreen = ({ isVisible, onClose }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAwareScrollView 
-        contentContainerStyle={styles.container} 
-        enableOnAndroid={true} 
-        extraScrollHeight={50} // ✅ Поднимаем чуть выше при открытии клавиатуры
-      >
-        <View style={styles.handle} />
+      <View style={styles.container}>
+        
+        {/* Кнопка закрытия (крестик) */}
+        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+          <Icon name="x" size={28} color="black" />
+        </TouchableOpacity>
+
         <Text style={styles.title}>Вход</Text>
 
         <TextInput
@@ -80,29 +77,28 @@ const LoginScreen = ({ isVisible, onClose }) => {
           <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Войти"}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Text style={styles.closeButtonText}>Закрыть</Text>
+        {/* Надпись для перехода на экран регистрации */}
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <Text style={styles.linkText}>Нет аккаунта? <Text style={styles.linkBold}>Зарегистрируйтесь</Text></Text>
         </TouchableOpacity>
-      </KeyboardAwareScrollView>
+
+      </View>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "white",
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    alignItems: "center",
+    flex: 1,
     justifyContent: "center",
+    padding: 20,
+    backgroundColor: "#F9F9F9",
   },
-  handle: {
-    width: 40,
-    height: 5,
-    backgroundColor: "gray",
-    borderRadius: 10,
-    marginBottom: 10,
+  closeButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
   },
   title: {
     fontSize: 24,
@@ -111,11 +107,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-    width: "100%",
-    height: 45,
+    height: 50,
     borderColor: "gray",
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 15,
     paddingHorizontal: 10,
     backgroundColor: "white",
@@ -125,23 +120,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "gray",
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     paddingHorizontal: 10,
     backgroundColor: "white",
+    marginBottom: 15,
   },
   passwordInput: {
     flex: 1,
-    height: 45,
+    height: 50,
   },
   eyeButton: {
     padding: 10,
   },
   button: {
     backgroundColor: "black",
-    paddingVertical: 12,
-    borderRadius: 5,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: "center",
-    width: "100%",
     marginBottom: 15,
   },
   buttonText: {
@@ -149,18 +144,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  closeButton: {
-    marginTop: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    borderColor: "black",
-    borderWidth: 1,
-  },
-  closeButtonText: {
-    color: "black",
+  linkText: {
+    textAlign: "center",
     fontSize: 16,
+    color: "gray",
+  },
+  linkBold: {
     fontWeight: "bold",
+    color: "black",
   },
 });
 

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  TouchableWithoutFeedback, Keyboard, Alert
+  TouchableWithoutFeedback, Keyboard, Alert, ScrollView
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useWindowDimensions } from "react-native";
 
 const RegisterScreen = ({ navigation }) => {
   const [username, setUsername] = useState("");
@@ -11,6 +13,8 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const { height } = useWindowDimensions();
 
   const handleRegister = async () => {
     if (!username || !email || !password) {
@@ -31,87 +35,102 @@ const RegisterScreen = ({ navigation }) => {
       
       if (response.ok) {
         Alert.alert("Успех", "Вы успешно зарегистрированы!");
-        navigation.navigate("LoginScreen"); // ✅ Перебрасываем на экран входа
+        navigation.replace("Login"); // ✅ Исправленный роутинг
       } else {
         Alert.alert("Ошибка", data.error || "Что-то пошло не так");
       }
-    } catch (error) {
-      Alert.alert("Ошибка", "Не удалось подключиться к серверу");
-      console.error("Ошибка регистрации:", error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Регистрация</Text>
+    <SafeAreaView style={styles.safeContainer}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView 
+          contentContainerStyle={[styles.container, { minHeight: height * 0.9 }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Кнопка закрытия (крестик) */}
+          <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+            <Icon name="x" size={28} color="black" />
+          </TouchableOpacity>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Имя пользователя"
-          value={username}
-          onChangeText={setUsername}
-          placeholderTextColor="gray"
-        />
+          <Text style={styles.title}>Регистрация</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholderTextColor="gray"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <View style={styles.passwordContainer}>
           <TextInput
-            style={styles.passwordInput}
-            placeholder="Пароль"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
+            style={styles.input}
+            placeholder="Имя пользователя"
+            value={username}
+            onChangeText={setUsername}
             placeholderTextColor="gray"
           />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-            <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholderTextColor="gray"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Пароль"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              placeholderTextColor="gray"
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+              <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+            <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Зарегистрироваться"}</Text>
           </TouchableOpacity>
-        </View>
 
-        <View style={{ height: 15 }} />
-
-        <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Зарегистрироваться"}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.link} onPress={() => navigation.navigate("LoginScreen")}>
-          <Text>Уже есть аккаунт? Войдите</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableWithoutFeedback>
+          {/* Надпись для перехода на экран входа */}
+          <TouchableOpacity onPress={() => navigation.replace("Login")}>
+            <Text style={styles.linkText}>Уже есть аккаунт? <Text style={styles.linkBold}>Войдите</Text></Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeContainer: {
     flex: 1,
-    justifyContent: "center",
-    padding: 20,
     backgroundColor: "#F9F9F9",
   },
+  container: {
+    flexGrow: 1,
+    justifyContent: "center",
+    padding: 20,
+  },
+  closeButton: {
+    position: "absolute",
+    top: 10,
+    right: 20,
+    zIndex: 10,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
   },
   input: {
-    height: 45,
+    height: 50,
     borderColor: "gray",
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     marginBottom: 15,
     paddingHorizontal: 10,
     backgroundColor: "white",
@@ -121,21 +140,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "gray",
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     paddingHorizontal: 10,
     backgroundColor: "white",
+    marginBottom: 15,
   },
   passwordInput: {
     flex: 1,
-    height: 45,
+    height: 50,
   },
   eyeButton: {
     padding: 10,
   },
   button: {
     backgroundColor: "black",
-    paddingVertical: 12,
-    borderRadius: 5,
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: "center",
     marginBottom: 15,
   },
@@ -144,9 +164,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  link: {
+  linkText: {
     textAlign: "center",
-    marginTop: 10,
+    fontSize: 16,
+    color: "gray",
+  },
+  linkBold: {
+    fontWeight: "bold",
+    color: "black",
   },
 });
 

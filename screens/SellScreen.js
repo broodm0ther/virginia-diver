@@ -1,18 +1,17 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { 
   View, Text, TouchableOpacity, StyleSheet, Linking, 
   Dimensions, PixelRatio, SafeAreaView, ScrollView
 } from "react-native";
 import { AuthContext } from "../context/AuthContext";
-import Modal from "react-native-modal";
-import LoginScreen from "./LoginScreen";
+import { useNavigation } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 const scaleFont = (size) => size * PixelRatio.getFontScale();
 
 const SellScreen = () => {
   const { user } = useContext(AuthContext);
-  const [isLoginVisible, setLoginVisible] = useState(false);
+  const navigation = useNavigation(); // ✅ Добавляем навигацию
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -31,7 +30,7 @@ const SellScreen = () => {
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => (user ? Linking.openURL("https://t.me/blightfallsummer") : setLoginVisible(true))}
+          onPress={() => (user ? Linking.openURL("https://t.me/blightfallsummer") : navigation.navigate("Login"))} // ✅ Теперь открывает `LoginScreen`
         >
           <Text style={styles.loginButtonText}>{user ? "Telegram" : "Log in / Sign up"}</Text>
         </TouchableOpacity>
@@ -49,29 +48,9 @@ const SellScreen = () => {
           <Text style={styles.featureText}>Понижайте цену, чтобы продать ваши вещи быстрее</Text>
         </View>
       </ScrollView>
-
-      {/* Модальное окно логина */}
-      <AuthModal isVisible={isLoginVisible} onClose={() => setLoginVisible(false)} />
     </SafeAreaView>
   );
 };
-
-// Компонент для модального окна логина
-const AuthModal = ({ isVisible, onClose }) => (
-  <Modal
-    isVisible={isVisible}
-    onSwipeComplete={onClose}
-    swipeDirection="down"
-    animationIn="slideInUp"
-    animationOut="slideOutDown"
-    backdropOpacity={0.5}
-    style={styles.modal}
-  >
-    <View style={styles.modalContent}>
-      <LoginScreen onClose={onClose} />
-    </View>
-  </Modal>
-);
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -129,16 +108,6 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: scaleFont(14),
     color: "gray",
-  },
-  modal: {
-    justifyContent: "flex-end",
-    margin: 0,
-  },
-  modalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
   },
 });
 
