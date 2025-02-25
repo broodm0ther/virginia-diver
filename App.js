@@ -7,10 +7,11 @@ import Icon from "react-native-vector-icons/Feather";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 import HomeScreen from "./screens/HomeScreen";
 import ProfileScreen from "./screens/ProfileScreen";
+import EditProfileScreen from "./screens/EditProfileScreen";
 import MessagesScreen from "./screens/MessagesScreen";
-import ChatScreen from "./screens/ChatScreen"; 
+import ChatScreen from "./screens/ChatScreen";
 import SellScreen from "./screens/SellScreen";
-import SearchScreen from "./screens/SearchScreen"; // ✅ Добавлен экран поиска!
+import SearchScreen from "./screens/SearchScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import { useNavigation } from "@react-navigation/native";
@@ -47,7 +48,7 @@ const MainTabs = () => {
         tabBarIcon: ({ focused }) => {
           let iconName;
           if (route.name === "Главная") iconName = "home";
-          else if (route.name === "Поиск") iconName = "search";  
+          else if (route.name === "Поиск") iconName = "search";
           else if (route.name === "Продать") iconName = "plus-circle";
           else if (route.name === "Сообщения") iconName = "message-square";
           else if (route.name === "Профиль") iconName = "user";
@@ -59,8 +60,18 @@ const MainTabs = () => {
       <Tab.Screen name="Поиск" component={SearchScreen} />
       <Tab.Screen name="Продать" component={SellScreen} />
       <Tab.Screen name="Сообщения" component={user ? MessagesScreen : AuthRequiredScreen} />
-      <Tab.Screen name="Профиль" component={user ? ProfileScreen : AuthRequiredScreen} />
+      <Tab.Screen name="Профиль" component={user ? ProfileStack : AuthRequiredScreen} />
     </Tab.Navigator>
+  );
+};
+
+// 🔄 Stack для профиля (чтобы можно было открыть "EditProfile")
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+    </Stack.Navigator>
   );
 };
 

@@ -1,7 +1,7 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useRef } from "react";
 import { 
   View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  TouchableWithoutFeedback, Keyboard, Alert
+  TouchableWithoutFeedback, Keyboard, Alert 
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { AuthContext } from "../context/AuthContext";
@@ -12,6 +12,9 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const passwordInputRef = useRef(null); // ⏩ Фокус на пароль
+  const loginButtonRef = useRef(null); // ⏩ Реф для кнопки логина
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -24,7 +27,7 @@ const LoginScreen = ({ navigation }) => {
       const data = await login(email, password);
       if (data.user) {
         Alert.alert("Успех", "Вы успешно вошли!");
-
+        
         // ✅ Перенаправляем пользователя на Главную с открытой вкладкой "Поиск"
         navigation.reset({
           index: 0,
@@ -49,6 +52,7 @@ const LoginScreen = ({ navigation }) => {
 
         <Text style={styles.title}>Вход</Text>
 
+        {/* Поле Email */}
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -57,23 +61,36 @@ const LoginScreen = ({ navigation }) => {
           placeholderTextColor="gray"
           keyboardType="email-address"
           autoCapitalize="none"
+          returnKeyType="next"
+          onSubmitEditing={() => passwordInputRef.current?.focus()} // ⏩ Enter → Фокус на пароль
+          blurOnSubmit={false} // Предотвращает закрытие клавиатуры
         />
 
+        {/* Поле Пароль */}
         <View style={styles.passwordContainer}>
           <TextInput
+            ref={passwordInputRef} // ⏩ Фокус на поле Пароль
             style={styles.passwordInput}
             placeholder="Пароль"
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
             placeholderTextColor="gray"
+            returnKeyType="done"
+            onSubmitEditing={handleLogin} // ⏩ Enter → Запускает логин
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
             <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        {/* Кнопка Войти */}
+        <TouchableOpacity 
+          ref={loginButtonRef} // ⏩ Реф установлен, но не используется для `press()`
+          style={styles.button} 
+          onPress={handleLogin} 
+          disabled={loading}
+        >
           <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Войти"}</Text>
         </TouchableOpacity>
 
