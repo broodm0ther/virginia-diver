@@ -30,7 +30,7 @@ const SellScreen = () => {
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => (user ? Linking.openURL("https://t.me/blightfallsummer") : navigation.navigate("Login"))} // ✅ Теперь открывает `LoginScreen`
+          onPress={() => (user ? Linking.openURL("https://t.me/amazonicaproject") : navigation.navigate("Login"))} // ✅ Теперь открывает `LoginScreen`
         >
           <Text style={styles.loginButtonText}>{user ? "Telegram" : "Log in / Sign up"}</Text>
         </TouchableOpacity>

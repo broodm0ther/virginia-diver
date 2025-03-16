@@ -2,12 +2,12 @@ import React, { useContext, useEffect, useState } from "react";
 import { 
   View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // ✅ Добавлено
+import { SafeAreaView } from "react-native-safe-area-context"; 
 import { AuthContext } from "../context/AuthContext";
 import Icon from "react-native-vector-icons/Feather";
 
 const ProfileScreen = ({ navigation }) => {
-  const { token } = useContext(AuthContext);
+  const { token, logout } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -103,19 +103,24 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.emptyMessage}>You don't have any listings for sale.</Text>
         <Text style={styles.sellHint}>Go to the 💲 Sell tab to get started.</Text>
 
+        {/* 🔴 Кнопка выхода */}
+        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeContainer: { // ✅ Добавлено
+  safeContainer: { 
     flex: 1,
     backgroundColor: "white",
   },
   container: {
     paddingHorizontal: 20,
-    paddingTop: 20, // ✅ Исправлено
+    paddingTop: 20, 
   },
   loader: {
     flex: 1,
@@ -201,6 +206,18 @@ const styles = StyleSheet.create({
   sellHint: {
     textAlign: "center",
     marginBottom: 20,
+  },
+  logoutButton: {
+    backgroundColor: "red",
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  logoutText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
 
