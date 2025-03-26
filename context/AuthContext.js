@@ -48,13 +48,22 @@ export const AuthProvider = ({ children }) => {
       });
   
       const data = await response.json();
-      console.log("📡 Ответ от бэкенда:", data); // ✅ Показывает полный ответ сервера
-  
       if (response.ok) {
         await AsyncStorage.setItem("token", data.token);
         setToken(data.token);
-        setUser(data.user); // ❌ Если `data.user` не существует, здесь ошибка!
-        console.log("✅ Вход выполнен, новый user:", data.user);
+  
+        // ✅ Запрашиваем профиль пользователя заново
+        const profileResponse = await fetch("http://192.168.1.15:8080/api/auth/profile", {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+  
+        const profile = await profileResponse.json();
+        if (profileResponse.ok) {
+          setUser(profile);
+          console.log("✅ Пользователь после логина:", profile);
+        } else {
+          console.log("❌ Ошибка получения профиля после логина");
+        }
       } else {
         console.error("❌ Ошибка авторизации:", data.error);
       }
@@ -63,6 +72,7 @@ export const AuthProvider = ({ children }) => {
       console.error("❌ Ошибка при входе:", error);
     }
   };
+  
   
 
   const logout = async () => {

@@ -11,29 +11,84 @@ const scaleFont = (size) => size * PixelRatio.getFontScale();
 
 const SellScreen = () => {
   const { user } = useContext(AuthContext);
-  const navigation = useNavigation(); // ✅ Добавляем навигацию
+  const navigation = useNavigation();
+
+  console.log("🧩 user:", user);
+
+  const renderContent = () => {
+    if (!user) {
+      // 🔹 Unregistered
+      return (
+        <>
+          <Text style={styles.title}>Хотите продать на Virginia Diver?</Text>
+          <Text style={styles.subtitle}>Присоединяйтесь к нашему фешн комьюнити и т.д.</Text>
+          <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Login")}>
+            <Text style={styles.loginButtonText}>Log in / Sign up</Text>
+          </TouchableOpacity>
+        </>
+      );
+    }
+
+    if (user.role === "registered") {
+      // 🔹 Registered user
+      return (
+        <>
+          <Text style={styles.title}>Чтобы продавать товар на данной площадке обратитесь к главному администратору</Text>
+          <Text style={styles.subtitle}>Нажмите на кнопку ниже, чтобы связаться с администратором.</Text>
+          <TouchableOpacity style={styles.loginButton} onPress={() => Linking.openURL("https://t.me/amazonicaproject")}>
+            <Text style={styles.loginButtonText}>Telegram</Text>
+          </TouchableOpacity>
+        </>
+      );
+    }
+
+    if (user.role === "seller") {
+      // 🔹 Seller
+      return (
+        <>
+          <Text style={styles.title}>Ваш товар ещё не опубликован</Text>
+          <View style={styles.featureBox}>
+            <Text style={styles.featureTitle}>1. Товар добавлен</Text>
+            <Text style={styles.featureText}>Вы можете добавить больше товаров или отредактировать текущий</Text>
+          </View>
+          <View style={styles.featureBox}>
+            <Text style={styles.featureTitle}>2. Добавьте реквизиты</Text>
+            <Text style={styles.featureText}>Укажите, куда отправлять оплату за проданный товар</Text>
+          </View>
+          <View style={[styles.featureBox, styles.lastFeatureBox]}>
+            <Text style={styles.featureTitle}>3. Ожидается проверка</Text>
+            <Text style={styles.featureText}>Ваш лот появится в течение 72 часов после модерации</Text>
+          </View>
+        </>
+      );
+    }
+
+    if (user.role === "admin") {
+      return (
+        <>
+          <Text style={styles.title}>Панель администратора</Text>
+          <Text style={styles.subtitle}>
+            Вы можете выдавать роли, управлять пользователями и следить за продавцами
+          </Text>
+    
+          <TouchableOpacity
+            style={styles.manageButton}
+            onPress={() => navigation.navigate("UserManagementScreen")}
+          >
+            <Text style={styles.manageButtonText}>Управление пользователями</Text>
+          </TouchableOpacity>
+        </>
+      );
+    }
+    
+    // fallback
+    return <Text>Неизвестная роль: {user.role}</Text>;
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <Text style={styles.title}>
-          {String(user
-            ? "Чтобы продавать товар на данной площадке обратитесь к главному администратору"
-            : "Хотите продать на Virginia Diver?")}
-        </Text>
-
-        <Text style={styles.subtitle}>
-          {String(user
-            ? "Нажмите на кнопку ниже, чтобы связаться с администратором."
-            : "Присоединяйтесь к нашему фешн комьюнити и т.д.")}
-        </Text>
-
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => (user ? Linking.openURL("https://t.me/amazonicaproject") : navigation.navigate("Login"))} // ✅ Теперь открывает `LoginScreen`
-        >
-          <Text style={styles.loginButtonText}>{user ? "Telegram" : "Log in / Sign up"}</Text>
-        </TouchableOpacity>
+        {renderContent()}
 
         <View style={styles.featureBox}>
           <Text style={styles.featureTitle}>🔒 Вы защищены</Text>
@@ -109,6 +164,23 @@ const styles = StyleSheet.create({
     fontSize: scaleFont(14),
     color: "gray",
   },
+  manageButton: {
+    backgroundColor: "black",
+    paddingVertical: height * 0.015,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: height * 0.03,
+    width: "100%",
+  },
+  
+  manageButtonText: {
+    color: "white",
+    fontSize: scaleFont(16),
+    fontWeight: "bold",
+    textAlign: "center",
+  },  
 });
 
 export default SellScreen;

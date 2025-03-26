@@ -14,6 +14,7 @@ import SellScreen from "./screens/SellScreen";
 import SearchScreen from "./screens/SearchScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
+import UserManagementScreen from "./screens/UserManagementScreen";
 import { useNavigation } from "@react-navigation/native";
 
 const Stack = createStackNavigator();
@@ -85,6 +86,7 @@ export default function App() {
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
+          <Stack.Screen name="UserManagementScreen" component={UserManagementScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
