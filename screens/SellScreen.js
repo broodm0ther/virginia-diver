@@ -1,7 +1,14 @@
-import React, { useContext } from "react";
-import { 
-  View, Text, TouchableOpacity, StyleSheet, Linking, 
-  Dimensions, PixelRatio, SafeAreaView, ScrollView
+import React, { useContext, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Linking,
+  Dimensions,
+  PixelRatio,
+  SafeAreaView,
+  ScrollView,
 } from "react-native";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
@@ -10,14 +17,31 @@ const { width, height } = Dimensions.get("window");
 const scaleFont = (size) => size * PixelRatio.getFontScale();
 
 const SellScreen = () => {
-  const { user } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
   const navigation = useNavigation();
+  const [pendingProducts, setPendingProducts] = useState([]);
 
-  console.log("🧩 user:", user);
+  useEffect(() => {
+    const fetchPending = async () => {
+      if (user?.role === "seller") {
+        try {
+          const response = await fetch("http://192.168.1.15:8080/api/products/my", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setPendingProducts(data.products || []);
+          }
+        } catch (err) {
+          console.error("Ошибка получения товаров продавца", err);
+        }
+      }
+    };
+    fetchPending();
+  }, [user]);
 
   const renderContent = () => {
     if (!user) {
-      // 🔹 Unregistered
       return (
         <>
           <Text style={styles.title}>Хотите продать на Virginia Diver?</Text>
@@ -30,7 +54,6 @@ const SellScreen = () => {
     }
 
     if (user.role === "registered") {
-      // 🔹 Registered user
       return (
         <>
           <Text style={styles.title}>Чтобы продавать товар на данной площадке обратитесь к главному администратору</Text>
@@ -43,22 +66,28 @@ const SellScreen = () => {
     }
 
     if (user.role === "seller") {
-      // 🔹 Seller
       return (
         <>
-          <Text style={styles.title}>Ваш товар ещё не опубликован</Text>
-          <View style={styles.featureBox}>
-            <Text style={styles.featureTitle}>1. Товар добавлен</Text>
-            <Text style={styles.featureText}>Вы можете добавить больше товаров или отредактировать текущий</Text>
-          </View>
-          <View style={styles.featureBox}>
-            <Text style={styles.featureTitle}>2. Добавьте реквизиты</Text>
-            <Text style={styles.featureText}>Укажите, куда отправлять оплату за проданный товар</Text>
-          </View>
-          <View style={[styles.featureBox, styles.lastFeatureBox]}>
-            <Text style={styles.featureTitle}>3. Ожидается проверка</Text>
-            <Text style={styles.featureText}>Ваш лот появится в течение 72 часов после модерации</Text>
-          </View>
+          <Text style={styles.title}>Продавайте</Text>
+          <Text style={styles.subtitle}>Теперь вы можете выставить товар на продажу</Text>
+
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => navigation.navigate("AddProductScreen")}
+          >
+            <Text style={styles.loginButtonText}>Выставить товар на продажу</Text>
+          </TouchableOpacity>
+
+          {pendingProducts.length > 0 && (
+            <View style={styles.featureBox}>
+              <Text style={styles.featureTitle}>На проверке:</Text>
+              {pendingProducts.map((item) => (
+                <Text key={item.id} style={styles.featureText}>
+                  • {item.title} — ожидает подтверждения
+                </Text>
+              ))}
+            </View>
+          )}
         </>
       );
     }
@@ -67,21 +96,24 @@ const SellScreen = () => {
       return (
         <>
           <Text style={styles.title}>Панель администратора</Text>
-          <Text style={styles.subtitle}>
-            Вы можете выдавать роли, управлять пользователями и следить за продавцами
-          </Text>
-    
+          <Text style={styles.subtitle}>Вы можете выдавать роли, управлять пользователями и следить за продавцами</Text>
           <TouchableOpacity
             style={styles.manageButton}
             onPress={() => navigation.navigate("UserManagementScreen")}
           >
             <Text style={styles.manageButtonText}>Управление пользователями</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.manageButton}
+            onPress={() => navigation.navigate("ProductModerationScreen")}
+          >
+            <Text style={styles.manageButtonText}>Модерация объявлений</Text>
+          </TouchableOpacity>
         </>
       );
     }
-    
-    // fallback
+
     return <Text>Неизвестная роль: {user.role}</Text>;
   };
 
@@ -174,13 +206,12 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.03,
     width: "100%",
   },
-  
   manageButtonText: {
     color: "white",
     fontSize: scaleFont(16),
     fontWeight: "bold",
     textAlign: "center",
-  },  
+  },
 });
 
 export default SellScreen;

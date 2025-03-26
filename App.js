@@ -15,6 +15,8 @@ import SearchScreen from "./screens/SearchScreen";
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import UserManagementScreen from "./screens/UserManagementScreen";
+import AddProductScreen from "./screens/AddProductScreen";
+import ProductModerationScreen from "./screens/ProductModerationScreen";
 import { useNavigation } from "@react-navigation/native";
 
 const Stack = createStackNavigator();
@@ -87,6 +89,8 @@ export default function App() {
           <Stack.Screen name="Register" component={RegisterScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="UserManagementScreen" component={UserManagementScreen} />
+          <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
+          <Stack.Screen name="ProductModerationScreen" component={ProductModerationScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
