@@ -44,7 +44,7 @@ const SellScreen = () => {
     if (!user) {
       return (
         <>
-          <Text style={styles.title}>Хотите продать на Virginia Diver?</Text>
+          <Text style={styles.title}>Хотите продать на amazonica project?</Text>
           <Text style={styles.subtitle}>Присоединяйтесь к нашему фешн комьюнити и т.д.</Text>
           <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate("Login")}>
             <Text style={styles.loginButtonText}>Log in / Sign up</Text>
