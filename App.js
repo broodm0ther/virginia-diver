@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
@@ -18,11 +18,11 @@ import UserManagementScreen from "./screens/UserManagementScreen";
 import AddProductScreen from "./screens/AddProductScreen";
 import ProductModerationScreen from "./screens/ProductModerationScreen";
 import { useNavigation } from "@react-navigation/native";
+import SplashScreen from "./screens/SplashScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// 🔐 Экран-заглушка для неавторизованных пользователей
 const AuthRequiredScreen = () => {
   const navigation = useNavigation();
   return (
@@ -35,10 +35,8 @@ const AuthRequiredScreen = () => {
   );
 };
 
-// 🔻 Вкладки нижней навигации
 const MainTabs = () => {
   const { user } = useContext(AuthContext);
-
   return (
     <Tab.Navigator
       initialRouteName="Главная"
@@ -59,7 +57,7 @@ const MainTabs = () => {
         },
       })}
     >
-      <Tab.Screen name="Главная" component={user ? HomeScreen : AuthRequiredScreen} />
+      <Tab.Screen name="Главная" component={HomeScreen} />
       <Tab.Screen name="Поиск" component={SearchScreen} />
       <Tab.Screen name="Продать" component={SellScreen} />
       <Tab.Screen name="Сообщения" component={user ? MessagesScreen : AuthRequiredScreen} />
@@ -68,7 +66,6 @@ const MainTabs = () => {
   );
 };
 
-// 🔄 Stack для профиля (чтобы можно было открыть "EditProfile")
 const ProfileStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -78,8 +75,13 @@ const ProfileStack = () => {
   );
 };
 
-// 📌 Главная навигация
 export default function App() {
+  const [isReady, setIsReady] = useState(false);
+
+  if (!isReady) {
+    return <SplashScreen onFinish={() => setIsReady(true)} />;
+  }
+
   return (
     <AuthProvider>
       <NavigationContainer>
@@ -97,7 +99,6 @@ export default function App() {
   );
 }
 
-// 🎨 Стили
 const styles = StyleSheet.create({
   tabBar: {
     position: "absolute",

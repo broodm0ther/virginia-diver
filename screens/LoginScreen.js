@@ -76,6 +76,7 @@ const LoginScreen = ({ navigation }) => {
             value={password}
             onChangeText={setPassword}
             placeholderTextColor="gray"
+            autoCapitalize="none"
             returnKeyType="done"
             onSubmitEditing={handleLogin} // ⏩ Enter → Запускает логин
           />

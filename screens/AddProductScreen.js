@@ -169,13 +169,25 @@ const AddProductScreen = () => {
 
         <ScrollView horizontal style={{ marginVertical: 10 }}>
           {images.map((img, index) => (
-            <Image
-              key={index}
-              source={{ uri: img.uri }}
-              style={{ width: 80, height: 80, marginRight: 10, borderRadius: 8 }}
-            />
+            <View key={index} style={styles.imageWrapper}>
+              <Image
+                source={{ uri: img.uri }}
+                style={styles.imageThumb}
+              />
+              <TouchableOpacity
+                style={styles.removeIcon}
+                onPress={() => {
+                  const newImages = [...images];
+                  newImages.splice(index, 1);
+                  setImages(newImages);
+                }}
+              >
+                <Icon name="x" size={14} color="#fff" />
+              </TouchableOpacity>
+            </View>
           ))}
         </ScrollView>
+
 
         <TouchableOpacity
           style={styles.submitButton}
@@ -223,6 +235,26 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: "top",
   },
+  imageWrapper: {
+    position: "relative",
+    marginRight: 10,
+  },
+  imageThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  removeIcon: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    backgroundColor: "black",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },  
   imageButton: {
     backgroundColor: "#ddd",
     paddingVertical: 10,
@@ -236,9 +268,10 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: "black",
-    paddingVertical: 15,
+    paddingVertical: 25,
     borderRadius: 8,
     alignItems: "center",
+    marginBottom: 50,
   },
   submitText: {
     color: "white",
