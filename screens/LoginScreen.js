@@ -1,7 +1,7 @@
 import React, { useState, useContext, useRef } from "react";
-import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  TouchableWithoutFeedback, Keyboard, Alert 
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  TouchableWithoutFeedback, Keyboard, Alert
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { AuthContext } from "../context/AuthContext";
@@ -13,8 +13,7 @@ const LoginScreen = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const passwordInputRef = useRef(null); // ⏩ Фокус на пароль
-  const loginButtonRef = useRef(null); // ⏩ Реф для кнопки логина
+  const passwordInputRef = useRef(null);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -27,12 +26,13 @@ const LoginScreen = ({ navigation }) => {
       const data = await login(email, password);
       if (data.user) {
         Alert.alert("Успех", "Вы успешно вошли!");
-        
-        // ✅ Перенаправляем пользователя на Главную с открытой вкладкой "Поиск"
         navigation.reset({
           index: 0,
           routes: [{ name: "MainTabs", params: { screen: "Поиск" } }],
         });
+      } else if (data.error?.includes("подтвердите")) {
+        Alert.alert("Ошибка", "Вы не подтвердили почту!");
+        navigation.navigate("EmailVerify", { email });
       } else {
         Alert.alert("Ошибка", data.error || "Неверный email или пароль.");
       }
@@ -44,15 +44,12 @@ const LoginScreen = ({ navigation }) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        
-        {/* Кнопка закрытия (крестик) */}
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
           <Icon name="x" size={28} color="black" />
         </TouchableOpacity>
 
         <Text style={styles.title}>Вход</Text>
 
-        {/* Поле Email */}
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -62,14 +59,13 @@ const LoginScreen = ({ navigation }) => {
           keyboardType="email-address"
           autoCapitalize="none"
           returnKeyType="next"
-          onSubmitEditing={() => passwordInputRef.current?.focus()} // ⏩ Enter → Фокус на пароль
-          blurOnSubmit={false} // Предотвращает закрытие клавиатуры
+          onSubmitEditing={() => passwordInputRef.current?.focus()}
+          blurOnSubmit={false}
         />
 
-        {/* Поле Пароль */}
         <View style={styles.passwordContainer}>
           <TextInput
-            ref={passwordInputRef} // ⏩ Фокус на поле Пароль
+            ref={passwordInputRef}
             style={styles.passwordInput}
             placeholder="Пароль"
             secureTextEntry={!showPassword}
@@ -78,99 +74,57 @@ const LoginScreen = ({ navigation }) => {
             placeholderTextColor="gray"
             autoCapitalize="none"
             returnKeyType="done"
-            onSubmitEditing={handleLogin} // ⏩ Enter → Запускает логин
+            onSubmitEditing={handleLogin}
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
             <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
           </TouchableOpacity>
         </View>
 
-        {/* Кнопка Войти */}
-        <TouchableOpacity 
-          ref={loginButtonRef} // ⏩ Реф установлен, но не используется для `press()`
-          style={styles.button} 
-          onPress={handleLogin} 
-          disabled={loading}
-        >
+        {/* 🔁 Забыли пароль */}
+        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+          <Text style={styles.forgotText}>Забыли пароль?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Войти"}</Text>
         </TouchableOpacity>
 
-        {/* Надпись для перехода на экран регистрации */}
         <TouchableOpacity onPress={() => navigation.navigate("Register")}>
           <Text style={styles.linkText}>Нет аккаунта? <Text style={styles.linkBold}>Зарегистрируйтесь</Text></Text>
         </TouchableOpacity>
-
       </View>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#F9F9F9",
-  },
-  closeButton: {
-    position: "absolute",
-    top: 50,
-    right: 20,
-    zIndex: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
+  container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#F9F9F9" },
+  closeButton: { position: "absolute", top: 50, right: 20, zIndex: 10 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
   input: {
-    height: 50,
-    borderColor: "gray",
-    borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    backgroundColor: "white",
+    height: 50, borderColor: "gray", borderWidth: 1, borderRadius: 10,
+    marginBottom: 15, paddingHorizontal: 10, backgroundColor: "white"
   },
   passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderColor: "gray",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    backgroundColor: "white",
+    flexDirection: "row", alignItems: "center", borderColor: "gray", borderWidth: 1,
+    borderRadius: 10, paddingHorizontal: 10, backgroundColor: "white", marginBottom: 5
+  },
+  passwordInput: { flex: 1, height: 50 },
+  eyeButton: { padding: 10 },
+  forgotText: {
+    textAlign: "right",
     marginBottom: 15,
-  },
-  passwordInput: {
-    flex: 1,
-    height: 50,
-  },
-  eyeButton: {
-    padding: 10,
+    fontSize: 14,
+    color: "gray"
   },
   button: {
-    backgroundColor: "black",
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 15,
+    backgroundColor: "black", paddingVertical: 14, borderRadius: 10,
+    alignItems: "center", marginBottom: 15
   },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  linkText: {
-    textAlign: "center",
-    fontSize: 16,
-    color: "gray",
-  },
-  linkBold: {
-    fontWeight: "bold",
-    color: "black",
-  },
+  buttonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  linkText: { textAlign: "center", fontSize: 16, color: "gray" },
+  linkBold: { fontWeight: "bold", color: "black" }
 });
 
 export default LoginScreen;

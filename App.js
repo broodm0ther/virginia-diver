@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
@@ -17,8 +17,11 @@ import RegisterScreen from "./screens/RegisterScreen";
 import UserManagementScreen from "./screens/UserManagementScreen";
 import AddProductScreen from "./screens/AddProductScreen";
 import ProductModerationScreen from "./screens/ProductModerationScreen";
-import { useNavigation } from "@react-navigation/native";
 import SplashScreen from "./screens/SplashScreen";
+import EmailVerifyScreen from "./screens/EmailVerifyScreen";
+import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
+import ResetPasswordScreen from "./screens/ResetPasswordScreen";
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -89,6 +92,9 @@ export default function App() {
           <Stack.Screen name="MainTabs" component={MainTabs} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
+          <Stack.Screen name="EmailVerify" component={EmailVerifyScreen} />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="UserManagementScreen" component={UserManagementScreen} />
           <Stack.Screen name="AddProductScreen" component={AddProductScreen} />

@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
-import { 
+import {
   View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; 
+import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthContext } from "../context/AuthContext";
 import Icon from "react-native-vector-icons/Feather";
 
@@ -45,66 +45,68 @@ const ProfileScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeContainer}> 
+    <SafeAreaView style={styles.safeContainer}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* 🔵 Верхняя часть профиля */}
-        <View style={styles.header}>
-          <Image source={{ uri: userData?.avatar || "https://placehold.co/100" }} style={styles.avatar} />
-          <View style={styles.userInfo}>
-            <Text style={styles.username}>{userData?.username || "User"}</Text>
-            <Text style={styles.transactions}>{userData?.transactions || 0} Transactions</Text>
-          </View>
 
-          {/* Настройки и шэринг */}
-          <View style={styles.icons}>
-            <TouchableOpacity>
-              <Icon name="share" size={22} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Icon name="settings" size={22} color="black" />
-            </TouchableOpacity>
-          </View>
+        {/* 🔝 Иконки настроек и шэринга */}
+        <View style={styles.topRightIcons}>
+          <TouchableOpacity style={styles.iconButton}>
+            <Icon name="share" size={22} color="black" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton}>
+            <Icon name="settings" size={22} color="black" />
+          </TouchableOpacity>
         </View>
 
-        {/* 🔵 Рейтинг, подписки и подписчики */}
-        <View style={styles.stats}>
-          <Text>⭐ {userData?.rating || "0.0"} ({userData?.reviews || 0} Reviews)</Text>
-          <Text>{userData?.following || 0} Following</Text>
-          <Text>{userData?.followers || 0} Followers</Text>
+        {/* 👤 Аватар и имя */}
+        <View style={styles.profileHeader}>
+          <Image
+            source={{ uri: userData?.avatar || "https://placehold.co/150" }}
+            style={styles.avatar}
+          />
+          <Text style={styles.username}>{userData?.username || "User"}</Text>
+          <Text style={styles.email}>{userData?.email || ""}</Text>
         </View>
 
-        {/* 🔵 Кнопка редактирования профиля */}
-        <TouchableOpacity 
-          style={styles.editButton} 
+        {/* ✏️ Кнопка редактирования */}
+        <TouchableOpacity
+          style={styles.editButton}
           onPress={() => navigation.navigate("EditProfile")}
         >
           <Text style={styles.editText}>Edit Profile</Text>
         </TouchableOpacity>
 
-        {/* 🔵 Топ бренды */}
-        <Text style={styles.sectionTitle}>Top Designers</Text>
-        <View style={styles.brands}>
-          {["IF SIX WAS NINE", "NUMBER (N)INE", "LE GRANDE BLEU (L.G.B.)"].map((brand, index) => (
-            <TouchableOpacity key={index} style={styles.brandButton}>
-              <Text>{brand}</Text>
-            </TouchableOpacity>
-          ))}
+        {/* 📊 Рейтинг, отзывы, сделки */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>⭐ {userData?.rating || "0.0"}</Text>
+            <Text style={styles.statLabel}>Rating</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{userData?.reviews || 0}</Text>
+            <Text style={styles.statLabel}>Reviews</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{userData?.transactions || 0}</Text>
+            <Text style={styles.statLabel}>Deals</Text>
+          </View>
         </View>
 
-        {/* 🔵 Навигация по профилю */}
-        <View style={styles.tabs}>
-          <TouchableOpacity style={styles.activeTab}><Text>SELLING</Text></TouchableOpacity>
-          <TouchableOpacity><Text>FAVORITES</Text></TouchableOpacity>
-          <TouchableOpacity><Text>🔒 SAVED</Text></TouchableOpacity>
-          <TouchableOpacity><Text>🔒 CLOSET</Text></TouchableOpacity>
+        {/* 🤝 Подписчики и подписки */}
+        <View style={styles.followContainer}>
+          <TouchableOpacity style={styles.followBox}>
+            <Icon name="users" size={18} color="black" />
+            <Text style={styles.followText}>{userData?.followers || 0} Followers</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.followBox}>
+            <Icon name="user-check" size={18} color="black" />
+            <Text style={styles.followText}>{userData?.following || 0} Following</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* 🔵 Список товаров (заглушка) */}
-        <Text style={styles.emptyMessage}>You don't have any listings for sale.</Text>
-        <Text style={styles.sellHint}>Go to the 💲 Sell tab to get started.</Text>
 
         {/* 🔴 Кнопка выхода */}
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+          <Icon name="log-out" size={16} color="white" style={{ marginRight: 6 }} />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
 
@@ -114,110 +116,110 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeContainer: { 
+  safeContainer: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#fff",
   },
   container: {
     paddingHorizontal: 20,
-    paddingTop: 20, 
+    paddingTop: 20,
+    alignItems: "center",
   },
   loader: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  header: {
+  topRightIcons: {
     flexDirection: "row",
+    position: "absolute",
+    right: 20,
+    top: 2,
+    gap: 15,
+    zIndex: 2,
+  },
+  iconButton: {
+    padding: 6,
+  },
+  profileHeader: {
     alignItems: "center",
-    justifyContent: "space-between",
+    marginTop: 40,
     marginBottom: 20,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 50,
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: 10,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    marginBottom: 15,
   },
   username: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
   },
-  transactions: {
-    fontSize: 12,
+  email: {
+    fontSize: 14,
     color: "gray",
   },
-  icons: {
-    flexDirection: "row",
-    gap: 15,
-  },
-  stats: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
-  },
   editButton: {
-    backgroundColor: "black",
+    backgroundColor: "#000",
     paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 5,
-    marginBottom: 20,
+    paddingHorizontal: 35,
+    borderRadius: 25,
+    marginBottom: 25,
   },
   editText: {
     color: "white",
-    fontWeight: "bold",
+    fontWeight: "600",
+    fontSize: 14,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  brands: {
+  statsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
+    width: "100%",
     marginBottom: 20,
   },
-  brandButton: {
-    borderWidth: 1,
-    borderColor: "black",
-    padding: 5,
-    borderRadius: 5,
+  statBox: {
+    alignItems: "center",
   },
-  tabs: {
+  statValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "gray",
+  },
+  followContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    borderBottomWidth: 1,
-    paddingBottom: 10,
-    marginBottom: 20,
+    width: "100%",
+    marginBottom: 30,
   },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderColor: "black",
-    paddingBottom: 5,
+  followBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    padding: 10,
+    backgroundColor: "#f2f2f2",
+    borderRadius: 10,
   },
-  emptyMessage: {
-    fontSize: 16,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  sellHint: {
-    textAlign: "center",
-    marginBottom: 20,
+  followText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   logoutButton: {
+    flexDirection: "row",
     backgroundColor: "red",
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    borderRadius: 20,
     alignItems: "center",
-    borderRadius: 5,
-    marginTop: 20,
+    marginBottom: 40,
   },
   logoutText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14,
   },
 });
 
