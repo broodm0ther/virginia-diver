@@ -1,43 +1,110 @@
-import React, { useState } from "react";
-import { 
-  View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform
+// ✅ ChatScreen.js (обновлён с защитой истории)
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useWindowDimensions } from "react-native";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+
 
 const ChatScreen = ({ route }) => {
-  const { userName } = route.params;
-  const [messages, setMessages] = useState([
-    { id: "1", text: "Привет!", isUser: false },
-    { id: "2", text: "Как дела?", isUser: false }
-  ]);
+  const { targetUserName } = route.params;
+  const { user } = useContext(AuthContext);
+  const userName = user?.username || "anonymous";
+
+
+  const roomId = [userName, targetUserName].sort().join("_");
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
+  const [loading, setLoading] = useState(true);
   const { height } = useWindowDimensions();
+  const ws = useRef(null);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(`http://192.168.1.15:8080/api/chat/history/${roomId}?user=${userName}`);
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setMessages(data);
+        } else {
+          console.warn("⚠️ История не является массивом:", data);
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки истории:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, []);
+
+  useEffect(() => {
+    ws.current = new WebSocket(`ws://192.168.1.15:8080/ws/chat?room=${roomId}&user=${userName}`);
+
+    ws.current.onopen = () => {
+      console.log("✅ WebSocket подключен");
+    };
+
+    ws.current.onmessage = (e) => {
+      const message = JSON.parse(e.data);
+      setMessages((prev) => [...prev, message]);
+    };
+
+    ws.current.onerror = (e) => {
+      console.error("❌ Ошибка WebSocket:", e.message);
+    };
+
+    ws.current.onclose = () => {
+      console.log("🔌 WebSocket отключен");
+    };
+
+    return () => {
+      ws.current?.close();
+    };
+  }, []);
 
   const sendMessage = () => {
-    if (inputText.trim()) {
-      setMessages([...messages, { id: Date.now().toString(), text: inputText, isUser: true }]);
+    if (inputText.trim() && ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(inputText.trim());
       setInputText("");
     }
   };
 
+  const renderMessage = ({ item }) => {
+    const isUser = item.user === userName;
+    return (
+      <View
+        style={[styles.message, isUser ? styles.userMessage : styles.otherMessage]}
+      >
+        <Text style={styles.messageUser}>{isUser ? "Вы" : item.user}</Text>
+        <Text style={styles.messageText}>{item.text}</Text>
+      </View>
+    );
+  };
+
   return (
-    <SafeAreaView style={[styles.safeContainer, { minHeight: height }]}>
-      <KeyboardAvoidingView 
+    <SafeAreaView style={[styles.safeContainer, { minHeight: height }]}> 
+      <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <Text style={styles.header}>{userName}</Text>
-        <FlatList
-          data={messages}
-          renderItem={({ item }) => (
-            <View style={[styles.message, item.isUser ? styles.userMessage : styles.otherMessage]}>
-              <Text style={styles.messageText}>{item.text}</Text>
-            </View>
-          )}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="handled" // 📌 Фикс скролла
-        />
+        <Text style={styles.header}>Чат с {targetUserName}</Text>
+
+        {loading ? (
+          <ActivityIndicator size="large" style={{ marginTop: 30 }} />
+        ) : (
+          <FlatList
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+            keyboardShouldPersistTaps="handled"
+          />
+        )}
+
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
@@ -55,13 +122,8 @@ const ChatScreen = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  container: {
-    flex: 1,
-  },
+  safeContainer: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1 },
   header: {
     fontSize: 20,
     fontWeight: "bold",
@@ -83,6 +145,11 @@ const styles = StyleSheet.create({
   otherMessage: {
     alignSelf: "flex-start",
     backgroundColor: "#e5e5ea",
+  },
+  messageUser: {
+    fontSize: 12,
+    color: "#ccc",
+    marginBottom: 3,
   },
   messageText: {
     fontSize: 16,
