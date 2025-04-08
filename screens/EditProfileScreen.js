@@ -1,30 +1,33 @@
 import React, { useState, useContext, useEffect } from "react";
-import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, 
-  Image, Alert, ActivityIndicator
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ScrollView, Alert, KeyboardAvoidingView, Platform,
+  ActivityIndicator, Image
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { AuthContext } from "../context/AuthContext";
-import { useWindowDimensions } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const EditProfileScreen = ({ navigation }) => {
+const EditProfileScreen = () => {
   const { token } = useContext(AuthContext);
-  const { height } = useWindowDimensions();
   const [username, setUsername] = useState("");
   const [region, setRegion] = useState("");
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await fetch("http://192.168.1.15:8080/api/auth/profile", {
           method: "GET",
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         const data = await response.json();
         if (response.ok) {
           setUsername(data.username || "");
@@ -34,198 +37,179 @@ const EditProfileScreen = ({ navigation }) => {
         } else {
           Alert.alert("Ошибка", "Не удалось загрузить профиль");
         }
-      } catch (error) {
-        console.error("Ошибка получения профиля:", error);
+      } catch (err) {
+        Alert.alert("Ошибка", "Не удалось получить данные");
       }
     };
-
     fetchProfile();
   }, []);
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Ошибка", "Доступ к галерее запрещен. Разрешите его в настройках.");
-      return;
-    }
+  const pickAvatar = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaType.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setAvatar(result.assets[0].uri);
+      if (!result.canceled) {
+        const pickedUri = result.assets[0].uri;
+        const fileName = pickedUri.split("/").pop();
+        const newPath = `${FileSystem.cacheDirectory}${fileName}`;
+        await FileSystem.copyAsync({ from: pickedUri, to: newPath });
+        setAvatar(newPath);
+        console.log("✅ Файл скопирован:", newPath);
+      }
+    } catch (err) {
+      console.log("❌ Ошибка выбора аватара:", err);
+      Alert.alert("Ошибка", "Не удалось выбрать фото");
     }
   };
 
   const handleSave = async () => {
     if (!username.trim()) {
-      Alert.alert("Ошибка", "Имя пользователя обязательно!");
+      Alert.alert("Ошибка", "Имя пользователя обязательно");
       return;
     }
-  
+
+    const formData = new FormData();
+    formData.append("username", username);
+    formData.append("region", region);
+    formData.append("bio", bio);
+
+    if (avatar && avatar.startsWith("file://")) {
+      const fileName = avatar.split("/").pop() || "avatar.jpg";
+      const ext = fileName.split(".").pop()?.toLowerCase() || "jpg";
+      const mimeType = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : `image/${ext}`;
+
+      formData.append("avatar", {
+        uri: avatar,
+        name: fileName,
+        type: mimeType,
+      });
+
+      console.log("📦 Файл добавлен:", fileName, mimeType);
+    } else {
+      console.log("⚠️ avatar не валиден или http:", avatar);
+    }
+
     setLoading(true);
-    console.log("📤 Начинаем отправку данных...");
-
     try {
-      let formData = new FormData();
-      formData.append("username", username);
-      formData.append("region", region);
-      formData.append("bio", bio);
-  
-      if (avatar) {
-        let filename = avatar.split("/").pop();
-        let match = /\.(\w+)$/.exec(filename);
-        let type = match ? `image/${match[1]}` : `image/jpeg`;
-
-        formData.append("avatar", {
-          uri: avatar,
-          name: filename,
-          type,
-        });
-      }
-
-      console.log("📤 Данные для отправки:", formData);
-  
       const response = await fetch("http://192.168.1.15:8080/api/auth/update-profile", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
-      console.log("🔍 Ждём ответ от сервера...");
-  
-      const responseText = await response.text();
-      console.log("🔍 Ответ сервера:", responseText);
-  
-      try {
-        const data = JSON.parse(responseText);
-        if (response.ok) {
-          Alert.alert("Успех", "Профиль успешно обновлен!");
-          navigation.goBack();
-        } else {
-          Alert.alert("Ошибка", data.error || "Не удалось обновить профиль");
-        }
-      } catch (jsonError) {
-        console.error("❌ Ошибка парсинга JSON:", jsonError);
-        Alert.alert("Ошибка", "Сервер вернул некорректный ответ.");
+      const text = await response.text();
+      console.log("📬 Ответ сервера:", text);
+
+      const data = JSON.parse(text);
+
+      if (response.ok) {
+        Alert.alert("Успешно", "Профиль обновлён");
+        navigation.goBack();
+      } else {
+        Alert.alert("Ошибка", data.error || "Не удалось обновить профиль");
       }
-    } catch (error) {
-      console.error("❌ Ошибка запроса:", error);
-      Alert.alert("Ошибка", "Ошибка сети.");
+    } catch (err) {
+      console.log("❌ Ошибка запроса:", err);
+      Alert.alert("Ошибка", "Сервер не отвечает");
     } finally {
-      console.log("⏹ Останавливаем загрузку...");
       setLoading(false);
     }
-};
+  };
 
+  const renderAvatar = () => {
+    if (avatar) {
+      return <Image source={{ uri: avatar }} style={styles.avatar} />;
+    } else if (username) {
+      return (
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.avatarInitials}>
+            {username.slice(0, 2).toUpperCase()}
+          </Text>
+        </View>
+      );
+    } else {
+      return (
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.avatarInitials}>??</Text>
+        </View>
+      );
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <View style={[styles.container, { minHeight: height * 0.9 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backText}>← Edit Profile</Text>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top }]} keyboardShouldPersistTaps="handled">
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backText}>← Назад</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-          <Image source={{ uri: avatar || "https://placehold.co/100" }} style={styles.avatar} />
-          <Text style={styles.changePhotoText}>Change Photo</Text>
+        <View style={styles.avatarSection}>
+          {renderAvatar()}
+          <TouchableOpacity onPress={pickAvatar}>
+            <Text style={styles.changePhoto}>Изменить фото</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={styles.label}>Имя пользователя</Text>
+        <TextInput style={styles.input} placeholder="Введите имя" value={username} onChangeText={setUsername} />
+
+        <Text style={styles.label}>Регион</Text>
+        <TextInput style={styles.input} placeholder="Ваш регион" value={region} onChangeText={setRegion} />
+
+        <Text style={styles.label}>О себе</Text>
+        <TextInput style={[styles.input, styles.textArea]} placeholder="Кратко расскажи о себе" value={bio} onChangeText={setBio} multiline />
+
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Сохранить</Text>}
         </TouchableOpacity>
-
-        <Text style={styles.label}>Username</Text>
-        <TextInput
-          style={styles.input}
-          value={username}
-          onChangeText={setUsername}
-          placeholder="Enter your name"
-        />
-
-        <Text style={styles.label}>Region</Text>
-        <TextInput
-          style={styles.input}
-          value={region}
-          onChangeText={setRegion}
-          placeholder="Your region"
-        />
-
-        <Text style={styles.label}>Biography</Text>
-        <TextInput 
-          style={[styles.input, styles.bioInput]} 
-          value={bio} 
-          onChangeText={setBio} 
-          placeholder="Tell us about yourself"
-          multiline
-        />
-
-        <TouchableOpacity style={[styles.saveButton, !username.trim() && styles.disabledButton]} onPress={handleSave}>
-          {loading ? <ActivityIndicator color="white" /> : <Text style={styles.saveText}>SAVE</Text>}
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
-// ✅ **Стили для экрана**
 const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-  container: {
-    padding: 20,
-  },
-  backButton: {
-    marginBottom: 20,
-  },
-  backText: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  avatarContainer: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
+  container: { paddingHorizontal: 20, backgroundColor: "#fff", flexGrow: 1 },
+  backButton: { alignSelf: "flex-start", marginBottom: 15 },
+  backText: { fontSize: 16, fontWeight: "bold" },
+  avatarSection: { alignItems: "center", marginBottom: 25 },
+  avatar: { width: 100, height: 100, borderRadius: 50 },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
     borderRadius: 50,
-  },
-  changePhotoText: {
-    color: "blue",
-    marginTop: 5,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-  },
-  bioInput: {
-    height: 80,
-  },
-  saveButton: {
-    backgroundColor: "blue",
-    paddingVertical: 12,
+    backgroundColor: "#999",
+    justifyContent: "center",
     alignItems: "center",
-    borderRadius: 5,
   },
-  disabledButton: {
-    backgroundColor: "gray",
-  },
-  saveText: {
-    color: "white",
+  avatarInitials: {
+    fontSize: 28,
     fontWeight: "bold",
+    color: "#fff",
   },
+  changePhoto: { marginTop: 10, color: "#007bff", fontWeight: "bold" },
+  label: { fontSize: 14, fontWeight: "bold", marginBottom: 5 },
+  input: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  textArea: { height: 100, textAlignVertical: "top" },
+  saveButton: {
+    backgroundColor: "black",
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 50,
+  },
+  saveText: { color: "white", fontSize: 16, fontWeight: "bold" },
 });
 
 export default EditProfileScreen;

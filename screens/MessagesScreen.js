@@ -1,12 +1,13 @@
-// ✅ MessagesScreen с lastMessage для каждого собеседника
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState, useCallback } from "react";
 import {
-  View, Text, FlatList, TouchableOpacity, Image, StyleSheet, ActivityIndicator, TextInput
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  ActivityIndicator, TextInput
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useWindowDimensions } from "react-native";
 import { AuthContext } from "../context/AuthContext";
+import UserAvatar from "../components/UserAvatar";
 
 const MessagesScreen = () => {
   const navigation = useNavigation();
@@ -16,38 +17,41 @@ const MessagesScreen = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchPartners = async () => {
     if (!user?.username) return;
 
-    const fetchPartners = async () => {
-      try {
-        const response = await fetch(`http://192.168.1.15:8080/api/public/chat-partners?user=${user.username}`);
-        const data = await response.json();
+    setLoading(true);
+    try {
+      const response = await fetch(`http://192.168.1.15:8080/api/public/chat-partners?user=${user.username}`);
+      const data = await response.json();
 
-        const withMessages = await Promise.all(
-          data.map(async (partner) => {
-            const roomId = [user.username, partner.username].sort().join("_");
-            try {
-              const res = await fetch(`http://192.168.1.15:8080/api/chat/history/${roomId}?user=${user.username}`);
-              const history = await res.json();
-              const lastMessage = Array.isArray(history) ? history[history.length - 1]?.text || "" : "";
-              return { ...partner, lastMessage };
-            } catch (err) {
-              return { ...partner, lastMessage: "" };
-            }
-          })
-        );
+      const withMessages = await Promise.all(
+        data.map(async (partner) => {
+          const roomId = [user.username, partner.username].sort().join("_");
+          try {
+            const res = await fetch(`http://192.168.1.15:8080/api/chat/history/${roomId}?user=${user.username}`);
+            const history = await res.json();
+            const lastMessage = Array.isArray(history) ? history[history.length - 1]?.text || "" : "";
+            return { ...partner, lastMessage };
+          } catch (err) {
+            return { ...partner, lastMessage: "" };
+          }
+        })
+      );
 
-        setPartners(withMessages);
-      } catch (err) {
-        console.error("❌ Ошибка загрузки партнёров:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setPartners(withMessages);
+    } catch (err) {
+      console.error("❌ Ошибка загрузки партнёров:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchPartners();
-  }, [user]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPartners();
+    }, [user])
+  );
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -57,12 +61,17 @@ const MessagesScreen = () => {
           targetUserName: item.username,
         })
       }
-      
     >
-      <Image source={{ uri: `http://192.168.1.15:8080${item.avatar}` }} style={styles.avatar} />
+      <UserAvatar
+        avatarUri={item.avatar}
+        username={item.username}
+        size={50}
+      />
       <View style={styles.textContainer}>
         <Text style={styles.name}>{item.username}</Text>
-        <Text style={styles.lastMessage} numberOfLines={1}>{item.lastMessage || "Начните диалог"}</Text>
+        <Text style={styles.lastMessage} numberOfLines={1}>
+          {item.lastMessage || "Начните диалог"}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -72,7 +81,7 @@ const MessagesScreen = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.safeContainer, { minHeight: height }]}> 
+    <SafeAreaView style={[styles.safeContainer, { minHeight: height }]}>
       <TextInput
         style={styles.searchInput}
         placeholder="Поиск собеседника..."
@@ -88,7 +97,7 @@ const MessagesScreen = () => {
         <FlatList
           data={filtered}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id?.toString()}
           keyboardShouldPersistTaps="handled"
         />
       )}
@@ -109,14 +118,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ddd",
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-  },
   textContainer: {
     flex: 1,
+    marginLeft: 12,
   },
   name: {
     fontSize: 16,

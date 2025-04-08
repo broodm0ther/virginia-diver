@@ -21,6 +21,7 @@ import SplashScreen from "./screens/SplashScreen";
 import EmailVerifyScreen from "./screens/EmailVerifyScreen";
 import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
 import ResetPasswordScreen from "./screens/ResetPasswordScreen";
+import FavoritesScreen from "./screens/FavoritesScreen";
 
 
 const Stack = createStackNavigator();
@@ -99,6 +100,7 @@ export default function App() {
           <Stack.Screen name="UserManagementScreen" component={UserManagementScreen} />
           <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
           <Stack.Screen name="ProductModerationScreen" component={ProductModerationScreen} />
+          <Stack.Screen name="FavoritesScreen" component={FavoritesScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>

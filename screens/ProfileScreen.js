@@ -1,38 +1,53 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import {
-  View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AuthContext } from "../context/AuthContext";
 import Icon from "react-native-vector-icons/Feather";
+import UserAvatar from "../components/UserAvatar";
+import { ScrollView } from "react-native-gesture-handler";
 
 const ProfileScreen = ({ navigation }) => {
   const { token, logout } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch("http://192.168.1.15:8080/api/auth/profile", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setUserData(data);
+      }
+    } catch (error) {
+      console.error("Ошибка профиля:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch("http://192.168.1.15:8080/api/auth/profile", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
+    fetchProfile();
+  }, []);
 
-        const data = await response.json();
-        if (response.ok) {
-          setUserData(data);
-        }
-      } catch (error) {
-        console.error("Ошибка профиля:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
     fetchProfile();
   }, []);
 
@@ -46,9 +61,12 @@ const ProfileScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeContainer}>
-      <ScrollView contentContainerStyle={styles.container}>
-
-        {/* 🔝 Иконки настроек и шэринга */}
+      <ScrollView
+        contentContainerStyle={[styles.container, { paddingTop: insets.top + 20 }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {/* 🔝 Иконки */}
         <View style={styles.topRightIcons}>
           <TouchableOpacity style={styles.iconButton}>
             <Icon name="share" size={22} color="black" />
@@ -58,25 +76,38 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* 👤 Аватар и имя */}
+        {/* 👤 Аватар, имя, email */}
         <View style={styles.profileHeader}>
-          <Image
-            source={{ uri: userData?.avatar || "https://placehold.co/150" }}
-            style={styles.avatar}
-          />
+          <UserAvatar avatarUri={userData?.avatar} username={userData?.username} size={130} />
           <Text style={styles.username}>{userData?.username || "User"}</Text>
           <Text style={styles.email}>{userData?.email || ""}</Text>
         </View>
 
-        {/* ✏️ Кнопка редактирования */}
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => navigation.navigate("EditProfile")}
-        >
-          <Text style={styles.editText}>Edit Profile</Text>
-        </TouchableOpacity>
+        {/* 🔘 Кнопки: Edit, Избранное, Доставка */}
+        <View style={styles.horizontalActions}>
+          <TouchableOpacity
+            style={styles.horizontalButton}
+            onPress={() => navigation.navigate("EditProfile")}
+          >
+            <Text style={styles.actionText}>Edit</Text>
+          </TouchableOpacity>
 
-        {/* 📊 Рейтинг, отзывы, сделки */}
+          <TouchableOpacity
+            style={styles.horizontalButton}
+            onPress={() => navigation.navigate("FavoritesScreen")}
+          >
+            <Text style={styles.actionText}>Избранное</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.horizontalButton}
+            onPress={() => navigation.navigate("DeliveryCalcScreen")}
+          >
+            <Text style={styles.actionText}>Доставка</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 📊 Рейтинг и прочее */}
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statValue}>⭐ {userData?.rating || "0.0"}</Text>
@@ -92,7 +123,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* 🤝 Подписчики и подписки */}
+        {/* 🤝 Подписчики */}
         <View style={styles.followContainer}>
           <TouchableOpacity style={styles.followBox}>
             <Icon name="users" size={18} color="black" />
@@ -104,12 +135,11 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* 🔴 Кнопка выхода */}
+        {/* 🔴 Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <Icon name="log-out" size={16} color="white" style={{ marginRight: 6 }} />
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -122,7 +152,6 @@ const styles = StyleSheet.create({
   },
   container: {
     paddingHorizontal: 20,
-    paddingTop: 20,
     alignItems: "center",
   },
   loader: {
@@ -134,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     position: "absolute",
     right: 20,
-    top: 2,
+    top: 10,
     gap: 15,
     zIndex: 2,
   },
@@ -143,14 +172,8 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     alignItems: "center",
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 20,
-  },
-  avatar: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    marginBottom: 15,
   },
   username: {
     fontSize: 22,
@@ -160,14 +183,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "gray",
   },
-  editButton: {
-    backgroundColor: "#000",
-    paddingVertical: 10,
-    paddingHorizontal: 35,
-    borderRadius: 25,
+  horizontalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
     marginBottom: 25,
+    width: "100%",
   },
-  editText: {
+  horizontalButton: {
+    flex: 1,
+    backgroundColor: "#000",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  actionText: {
     color: "white",
     fontWeight: "600",
     fontSize: 14,

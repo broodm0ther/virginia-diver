@@ -1,14 +1,7 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Linking,
-  Dimensions,
-  PixelRatio,
-  SafeAreaView,
-  ScrollView,
+  View, Text, TouchableOpacity, StyleSheet, Linking,
+  Dimensions, PixelRatio, SafeAreaView, ScrollView, RefreshControl
 } from "react-native";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigation } from "@react-navigation/native";
@@ -20,24 +13,31 @@ const SellScreen = () => {
   const { user, token } = useContext(AuthContext);
   const navigation = useNavigation();
   const [pendingProducts, setPendingProducts] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchPending = async () => {
+    if (user?.role === "seller") {
+      try {
+        const response = await fetch("http://192.168.1.15:8080/api/products/my", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setPendingProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error("Ошибка получения товаров продавца", err);
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchPending = async () => {
-      if (user?.role === "seller") {
-        try {
-          const response = await fetch("http://192.168.1.15:8080/api/products/my", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await response.json();
-          if (response.ok) {
-            setPendingProducts(data.products || []);
-          }
-        } catch (err) {
-          console.error("Ошибка получения товаров продавца", err);
-        }
-      }
-    };
     fetchPending();
+  }, [user]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchPending().finally(() => setRefreshing(false));
   }, [user]);
 
   const renderContent = () => {
@@ -119,7 +119,10 @@ const SellScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
+      <ScrollView
+        contentContainerStyle={styles.scrollView}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
         {renderContent()}
 
         <View style={styles.featureBox}>

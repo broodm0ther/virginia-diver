@@ -1,10 +1,12 @@
 import React, { useState, useContext, useRef } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  TouchableWithoutFeedback, Keyboard, Alert
+  TouchableWithoutFeedback, Keyboard, Alert, ScrollView
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { AuthContext } from "../context/AuthContext";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useWindowDimensions } from "react-native";
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
@@ -14,6 +16,7 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const passwordInputRef = useRef(null);
+  const { height } = useWindowDimensions();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -42,64 +45,71 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-          <Icon name="x" size={28} color="black" />
-        </TouchableOpacity>
-
-        <Text style={styles.title}>Вход</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholderTextColor="gray"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          returnKeyType="next"
-          onSubmitEditing={() => passwordInputRef.current?.focus()}
-          blurOnSubmit={false}
-        />
-
-        <View style={styles.passwordContainer}>
-          <TextInput
-            ref={passwordInputRef}
-            style={styles.passwordInput}
-            placeholder="Пароль"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-            placeholderTextColor="gray"
-            autoCapitalize="none"
-            returnKeyType="done"
-            onSubmitEditing={handleLogin}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
-            <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
+    <SafeAreaView style={styles.safeContainer}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={[styles.container, { minHeight: height * 0.9 }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+            <Icon name="x" size={28} color="black" />
           </TouchableOpacity>
-        </View>
 
-        {/* 🔁 Забыли пароль */}
-        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-          <Text style={styles.forgotText}>Забыли пароль?</Text>
-        </TouchableOpacity>
+          <Text style={styles.title}>Вход</Text>
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Войти"}</Text>
-        </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholderTextColor="gray"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            returnKeyType="next"
+            onSubmitEditing={() => passwordInputRef.current?.focus()}
+            blurOnSubmit={false}
+          />
 
-        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.linkText}>Нет аккаунта? <Text style={styles.linkBold}>Зарегистрируйтесь</Text></Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableWithoutFeedback>
+          <View style={styles.passwordContainer}>
+            <TextInput
+              ref={passwordInputRef}
+              style={styles.passwordInput}
+              placeholder="Пароль"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+              placeholderTextColor="gray"
+              autoCapitalize="none"
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeButton}>
+              <Icon name={showPassword ? "eye" : "eye-off"} size={20} color="gray" />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+            <Text style={styles.forgotText}>Забыли пароль?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+            <Text style={styles.buttonText}>{loading ? "Загрузка..." : "Войти"}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={styles.linkText}>
+              Нет аккаунта? <Text style={styles.linkBold}>Зарегистрируйтесь</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#F9F9F9" },
+  safeContainer: { flex: 1, backgroundColor: "#F9F9F9" },
+  container: { flexGrow: 1, justifyContent: "center", padding: 20 },
   closeButton: { position: "absolute", top: 50, right: 20, zIndex: 10 },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
   input: {
