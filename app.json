@@ -16,6 +16,21 @@
     },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "39deaba5-716e-4bab-ba0e-3b65711f7c19"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.alfeva.amazonicaproject",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }

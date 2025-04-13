@@ -28,12 +28,11 @@ const HomeScreen = () => {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [deleteReason, setDeleteReason] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchApprovedProducts().finally(() => setRefreshing(false));
   }, []);
-
 
   const fetchApprovedProducts = async () => {
     try {
@@ -136,8 +135,8 @@ const HomeScreen = () => {
         <View style={styles.details}>
           <Text numberOfLines={1} style={styles.title}>{item.title}</Text>
           <Text numberOfLines={2} style={styles.subtitle}>{item.description}</Text>
-          <Text style={styles.price}>{item.price}₽</Text>
-          <Text style={styles.author}>{author}</Text>
+          <Text numberOfLines={1} style={styles.price}>{item.price}₽</Text>
+          <Text numberOfLines={1} style={styles.author}>{author}</Text>
         </View>
       </View>
     );
@@ -157,7 +156,7 @@ const HomeScreen = () => {
           renderItem={renderItem}
           keyExtractor={(item) => item.id?.toString()}
           numColumns={2}
-          columnWrapperStyle={styles.row}
+          columnWrapperStyle={{ justifyContent: "space-between", alignItems: "flex-start" }}
           contentContainerStyle={[styles.container, { paddingTop: 12 }]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -211,24 +210,20 @@ const styles = StyleSheet.create({
     color: "#222",
   },
   container: {
+    backgroundColor: "#F4F4F4",
     padding: 10,
     paddingTop: 0,
   },
-  row: {
-    justifyContent: "space-between",
-  },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 16,
+    borderRadius: 12,
     width: (width - 30) / 2,
-    marginBottom: 15,
+    marginBottom: 12,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-    elevation: 3,
     position: "relative",
+  },
+  row: {
+    justifyContent: "space-between",
   },
   image: {
     width: "100%",
@@ -247,28 +242,34 @@ const styles = StyleSheet.create({
   },
   details: {
     padding: 10,
+    flex: 1,
+    justifyContent: "space-between",
   },
   title: {
     fontSize: 14,
     fontWeight: "bold",
     color: "#000",
     marginBottom: 4,
+    width: "100%",
   },
   subtitle: {
     fontSize: 12,
     color: "#777",
+    width: "100%",
   },
   price: {
     fontSize: 15,
     fontWeight: "bold",
     marginTop: 8,
     color: "#111",
+    width: "100%",
   },
   author: {
     fontSize: 12,
     fontWeight: "500",
     color: "#000",
     marginTop: 4,
+    width: "100%",
   },
   favoriteIcon: {
     position: "absolute",
@@ -311,9 +312,9 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 15,
   },
   modalActions: {
+    marginBottom: 15,
     flexDirection: "row",
     justifyContent: "space-between",
   },
