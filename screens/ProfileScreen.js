@@ -101,7 +101,7 @@ const ProfileScreen = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.horizontalButton}
-            onPress={() => navigation.navigate("DeliveryCalcScreen")}
+            onPress={() => navigation.navigate("ComingSoonScreen")}
           >
             <Text style={styles.actionText}>Доставка</Text>
           </TouchableOpacity>

@@ -97,22 +97,31 @@ const SellScreen = () => {
         <>
           <Text style={styles.title}>Панель администратора</Text>
           <Text style={styles.subtitle}>Вы можете выдавать роли, управлять пользователями и следить за продавцами</Text>
+    
           <TouchableOpacity
             style={styles.manageButton}
             onPress={() => navigation.navigate("UserManagementScreen")}
           >
             <Text style={styles.manageButtonText}>Управление пользователями</Text>
           </TouchableOpacity>
-
+    
           <TouchableOpacity
             style={styles.manageButton}
             onPress={() => navigation.navigate("ProductModerationScreen")}
           >
             <Text style={styles.manageButtonText}>Модерация объявлений</Text>
           </TouchableOpacity>
+    
+          <TouchableOpacity
+            style={styles.manageButton}
+            onPress={() => navigation.navigate("AddProductScreen")}
+          >
+            <Text style={styles.manageButtonText}>Выставить товар на продажу</Text>
+          </TouchableOpacity>
         </>
       );
     }
+    
 
     return <Text>Неизвестная роль: {user.role}</Text>;
   };

@@ -22,6 +22,7 @@ import EmailVerifyScreen from "./screens/EmailVerifyScreen";
 import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
 import ResetPasswordScreen from "./screens/ResetPasswordScreen";
 import FavoritesScreen from "./screens/FavoritesScreen";
+import ComingSoonScreen from "./screens/ComingSoonScreen";
 
 
 const Stack = createStackNavigator();
@@ -64,7 +65,7 @@ const MainTabs = () => {
       <Tab.Screen name="Главная" component={HomeScreen} />
       <Tab.Screen name="Поиск" component={SearchScreen} />
       <Tab.Screen name="Продать" component={SellScreen} />
-      <Tab.Screen name="Сообщения" component={user ? MessagesScreen : AuthRequiredScreen} />
+      <Tab.Screen name="Сообщения" component={user ? ComingSoonScreen : AuthRequiredScreen} />
       <Tab.Screen name="Профиль" component={user ? ProfileStack : AuthRequiredScreen} />
     </Tab.Navigator>
   );
@@ -101,6 +102,7 @@ export default function App() {
           <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
           <Stack.Screen name="ProductModerationScreen" component={ProductModerationScreen} />
           <Stack.Screen name="FavoritesScreen" component={FavoritesScreen} />
+          <Stack.Screen name="ComingSoonScreen" component={ComingSoonScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </AuthProvider>
